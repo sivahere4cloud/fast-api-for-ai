@@ -56,7 +56,76 @@ def get_documents(category: str):
     return results
 
 ##Multiple query parameteres
+@app.get("/documents/search")
+def search_documents(
+    category: str,
+    author: str
+):
+    results = []
 
+    for document in documents:
+        if (
+            document["category"] == category
+            and document["author"] == author
+        ):
+            results.append(document)
+
+    return results
+
+## Request Body (Pydantic Models)
+#This is one of the most important topics because every AI application receives data from users.
+
+#create a pydantic model
+
+
+from models import ChatRequest,UserResponse
+
+"""
+@app.post("/chat")
+def chat(request: ChatRequest):
+    return{
+        "recived":request.message,
+        "model": request.model,
+        "temperature": request.temperature
+    }
+"""
+
+@app.post("/chat")
+def chat(request: ChatRequest):
+    return {
+        "reply": f"You asked: {request.message}",
+        "model": request.model,
+        "temperature": request.temperature
+    }
+
+##Response Models
+#================
+
+@app.get("/user", response_model=UserResponse)
+def get_user():
+    return {
+        "id": 1,
+        "username": "siva",
+        "email": "siva@gmail.com",
+        "password": "secret123"
+    }
+
+##Status Codes
+from fastapi import HTTPException
+
+@app.get("/student/{id}")
+def get_student(id: int):
+    if id != 1:
+        raise HTTPException(
+            status_code=404,
+            detail="Student not found"
+        )
+
+    return {"id": 1, "name": "Siva"}
+
+
+#Dependency Injection(Depends)
+#If you master Depends, you'll understand how production FastAPI applications are built.
 
 
 
