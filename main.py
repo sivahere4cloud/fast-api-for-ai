@@ -1,3 +1,5 @@
+
+"""
 from fastapi import FastAPI
 
 
@@ -80,7 +82,7 @@ def search_documents(
 
 from models import ChatRequest,UserResponse
 
-"""
+
 @app.post("/chat")
 def chat(request: ChatRequest):
     return{
@@ -88,7 +90,7 @@ def chat(request: ChatRequest):
         "model": request.model,
         "temperature": request.temperature
     }
-"""
+
 
 @app.post("/chat")
 def chat(request: ChatRequest):
@@ -127,9 +129,123 @@ def get_student(id: int):
 #Dependency Injection(Depends)
 #If you master Depends, you'll understand how production FastAPI applications are built.
 
+from database import SessionLocal
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+from fastapi import Depends
+from sqlalchemy.orm import Session
+
+@app.get("/users")
+def get_users(db:Session = Depends(get_db)):
+    return db.query(User).all
+"""
+#Asynv vs Sync
+
+from fastapi import FastAPI,Request
+import asyncio
+app =FastAPI()
+
+@app.get("/")
+def hello():
+    return {"Message": "Hello"}
+
+
+#Asynchronous
+
+@app.get("/asynco")
+async def greet():
+    await asyncio.sleep(5)
+    return {"message": "Hello"}
+
+#Middleware :: Middleware is code that runs before and after every request.
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    print("Before Request")
+
+    response = await call_next(request)
+
+    print("After Request")
+
+    return response
+
+@app.get("/")
+def home():
+    return {"message": "Hello"}
+
+#Exception handling
+
+@app.get("/products/{id}")
+def get_product(id: int):
+    return products[id]
+
+from fastapi import HTTPException
+
+@app.get("/products/{id}")
+def get_product(id: int):
+    if id != 1:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found"
+        )
+
+    return {
+        "id": 1,
+        "name": "Laptop"
+    }
 
 
 
 
+@app.get("/student/{id}")
+def get_student(id: int):
 
+    if id != 1:
+        raise HTTPException(
+            status_code=404,
+            detail="Student not found"
+        )
+
+    return {
+        "id": 1,
+        "name": "Siva"
+    }
+
+
+#Background Tasks
+from fastapi import FastAPI, BackgroundTasks
+
+app = FastAPI()
+
+def send_email(email: str):
+    print(f"Sending email to {email}")
+
+@app.post("/register")
+def register(email: str, background_tasks: BackgroundTasks):
+
+    background_tasks.add_task(send_email, email)
+
+    return {"message": "User registered successfully"}
+
+
+#Mini Exercise
+from fastapi import BackgroundTasks
+
+def log_message():
+    print("Background task executed")
+
+@app.get("/background")
+def background(background_tasks: BackgroundTasks):
+
+    background_tasks.add_task(log_message)
+
+    return {"message": "Response returned immediately"}
 
